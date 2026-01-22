@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font: 14px system-ui;
+        width: 260px;
+        padding: 8px;
+      }
+      ul {
+        padding-left: 0;
+        list-style: none;
+      }
+      li {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      li span {
+        flex: 1;
+      }
+      li button {
+        padding: 2px 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="site" placeholder="example.com" />
+    <button id="add">Add</button>
+    <ul id="list"></ul>
+    <script src="dist/popup.js"></script>
+  </body>
+</html>
