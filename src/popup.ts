@@ -23,9 +23,26 @@ function render(blocked: string[]): void {
     clearCache.textContent = "🗑";
     clearCache.title = "Clear cache";
     clearCache.onclick = async () => {
-      await chrome.browsingData.removeCache({
-        origins: [`https://${d}`, `http://${d}`]
-      });
+      try {
+        // Build list of common origin variations for this domain
+        const origins = [
+          `https://${d}`,
+          `http://${d}`,
+          `https://www.${d}`,
+          `http://www.${d}`,
+          `https://m.${d}`,
+          `http://m.${d}`
+        ];
+        
+        await chrome.browsingData.remove(
+          { origins },
+          { cache: true, cacheStorage: true, serviceWorkers: true }
+        );
+        alert(`Cache cleared for ${d}`);
+      } catch (e) {
+        console.error('Cache clear failed:', e);
+        alert(`Failed to clear cache: ${e}`);
+      }
     };
     li.appendChild(clearCache);
 

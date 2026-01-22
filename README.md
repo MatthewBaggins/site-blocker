@@ -14,7 +14,3 @@ Browser extension to block websites on Chromium/Brave.
 - Click "Add"
 - Click "🗑️" to clear cache
 - Click "×" to remove
-
----
-
-**For app blocking on Ubuntu:** See [app-blocker-daemon](../app-blocker-daemon)
