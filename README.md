@@ -2,6 +2,8 @@
 
 Browser extension to block websites on Chromium/Brave.
 
+For app blocking on Ubuntu, see [app-blocker-daemon](https://github.com/MatthewBaggins/app-blocker-daemon).
+
 ## Install
 
 1. Build: `npm run build`
