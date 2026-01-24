@@ -2,6 +2,7 @@ import { DEFAULT_BLOCKED } from "./config";
 
 const siteInput = document.getElementById("site") as HTMLInputElement;
 const addBtn = document.getElementById("add") as HTMLButtonElement;
+const blockCurrentBtn = document.getElementById("blockCurrent") as HTMLButtonElement;
 const resetBtn = document.getElementById("reset") as HTMLButtonElement;
 const list = document.getElementById("list") as HTMLUListElement;
 
@@ -103,6 +104,17 @@ addBtn.onclick = async () => {
   if (!blocked.includes(d)) blocked.push(d);
   await chrome.storage.sync.set({ blocked });
   siteInput.value = "";
+  render(blocked);
+};
+
+blockCurrentBtn.onclick = async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab.url) return;
+  const d = norm(tab.url);
+  if (!d) return;
+  const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
+  if (!blocked.includes(d)) blocked.push(d);
+  await chrome.storage.sync.set({ blocked });
   render(blocked);
 };
 
