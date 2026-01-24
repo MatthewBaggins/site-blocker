@@ -1,3 +1,5 @@
+import { DEFAULT_BLOCKED } from "./config";
+
 async function updateRules(blocked: string[]): Promise<void> {
   const rules: chrome.declarativeNetRequest.Rule[] = blocked.map((domain, i) => ({
     id: i + 1,
@@ -19,8 +21,15 @@ async function updateRules(blocked: string[]): Promise<void> {
 }
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
-  await updateRules(blocked);
+  const { blocked } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
+  
+  // Initialize with defaults on first install
+  if (!blocked) {
+    await chrome.storage.sync.set({ blocked: DEFAULT_BLOCKED });
+    await updateRules(DEFAULT_BLOCKED);
+  } else {
+    await updateRules(blocked);
+  }
 });
 
 chrome.storage.onChanged.addListener(async (changes, area) => {

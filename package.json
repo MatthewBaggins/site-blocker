@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "description": "Block selected sites browser extension",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "esbuild src/bg.ts src/popup.ts --bundle --outdir=dist --format=iife",
+    "watch": "esbuild src/bg.ts src/popup.ts --bundle --outdir=dist --format=iife --watch"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",
+    "esbuild": "^0.27.2",
     "typescript": "^5.3.3"
   }
 }

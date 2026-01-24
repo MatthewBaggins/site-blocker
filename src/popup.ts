@@ -1,5 +1,8 @@
+import { DEFAULT_BLOCKED } from "./config";
+
 const siteInput = document.getElementById("site") as HTMLInputElement;
 const addBtn = document.getElementById("add") as HTMLButtonElement;
+const resetBtn = document.getElementById("reset") as HTMLButtonElement;
 const list = document.getElementById("list") as HTMLUListElement;
 
 function norm(s: string): string {
@@ -50,9 +53,10 @@ function render(blocked: string[]): void {
     rm.textContent = "×";
     rm.title = "Remove";
     rm.onclick = async () => {
-      blocked.splice(i, 1);
-      await chrome.storage.sync.set({ blocked });
-      render(blocked);
+      const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
+      const updated = blocked.filter(site => site !== d);
+      await chrome.storage.sync.set({ blocked: updated });
+      render(updated);
     };
     li.appendChild(rm);
     list.appendChild(li);
@@ -67,6 +71,13 @@ addBtn.onclick = async () => {
   await chrome.storage.sync.set({ blocked });
   siteInput.value = "";
   render(blocked);
+};
+
+resetBtn.onclick = async () => {
+  if (confirm("Reset to default blocked sites?")) {
+    await chrome.storage.sync.set({ blocked: DEFAULT_BLOCKED });
+    render(DEFAULT_BLOCKED);
+  }
 };
 
 load();
