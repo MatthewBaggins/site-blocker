@@ -11,6 +11,53 @@ const addDefaultBtn = document.getElementById("addDefault") as HTMLButtonElement
 const addCurrentToDefaultsBtn = document.getElementById("addCurrentToDefaults") as HTMLButtonElement;
 const defaultList = document.getElementById("defaultList") as HTMLUListElement;
 
+function confirmRemoval(domain: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modal = document.createElement("div");
+    modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000";
+    
+    const box = document.createElement("div");
+    box.style.cssText = "background:white;padding:12px;border-radius:8px;width:calc(100% - 20px);max-width:240px";
+    
+    const msg = document.createElement("p");
+    msg.textContent = `Type "${domain}" to confirm removal:`;
+    msg.style.cssText = "margin:0 0 8px 0;font-size:12px";
+    box.appendChild(msg);
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.style.cssText = "width:100%;padding:4px;margin:0 0 8px 0;box-sizing:border-box";
+    input.onpaste = (e) => e.preventDefault();
+    box.appendChild(input);
+    
+    const btnContainer = document.createElement("div");
+    btnContainer.style.cssText = "display:flex;gap:4px";
+    
+    const confirmBtn = document.createElement("button");
+    confirmBtn.textContent = "Confirm";
+    confirmBtn.style.cssText = "flex:1;padding:4px";
+    confirmBtn.onclick = () => {
+      document.body.removeChild(modal);
+      resolve(input.value === domain);
+    };
+    
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.style.cssText = "flex:1;padding:4px";
+    cancelBtn.onclick = () => {
+      document.body.removeChild(modal);
+      resolve(false);
+    };
+    
+    btnContainer.appendChild(confirmBtn);
+    btnContainer.appendChild(cancelBtn);
+    box.appendChild(btnContainer);
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+    input.focus();
+  });
+}
+
 function norm(s: string): string {
   return s.trim().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
 }
@@ -66,11 +113,8 @@ function render(blocked: string[]): void {
     rm.textContent = "×";
     rm.title = "Remove";
     rm.onclick = async () => {
-      const input = prompt(`Type "${d}" to confirm removal:`);
-      if (input !== d) {
-        if (input !== null) alert("Incorrect. Site not removed.");
-        return;
-      }
+      const confirmed = await confirmRemoval(d);
+      if (!confirmed) return;
       const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
       const updated = blocked.filter(site => site !== d);
       await chrome.storage.sync.set({ blocked: updated });
@@ -93,11 +137,8 @@ function renderDefaults(defaults: string[]): void {
     rm.textContent = "×";
     rm.title = "Remove";
     rm.onclick = async () => {
-      const input = prompt(`Type "${d}" to confirm removal:`);
-      if (input !== d) {
-        if (input !== null) alert("Incorrect. Site not removed.");
-        return;
-      }
+      const confirmed = await confirmRemoval(d);
+      if (!confirmed) return;
       const current = await getDefaults();
       const updated = current.filter(site => site !== d);
       await chrome.storage.sync.set({ defaults: updated });
