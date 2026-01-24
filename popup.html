@@ -23,6 +23,17 @@
       li button {
         padding: 2px 6px;
       }
+      details {
+        margin-top: 12px;
+        padding: 8px;
+        background: #f5f5f5;
+        border-radius: 4px;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
     </style>
   </head>
   <body>
@@ -30,6 +41,12 @@
     <button id="add">Add</button>
     <button id="reset">Reset to Defaults</button>
     <ul id="list"></ul>
+    <details>
+      <summary>Manage Defaults</summary>
+      <input id="defaultSite" placeholder="example.com" />
+      <button id="addDefault">Add Default</button>
+      <ul id="defaultList"></ul>
+    </details>
     <script src="dist/popup.js"></script>
   </body>
 </html>

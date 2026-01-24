@@ -5,13 +5,24 @@ const addBtn = document.getElementById("add") as HTMLButtonElement;
 const resetBtn = document.getElementById("reset") as HTMLButtonElement;
 const list = document.getElementById("list") as HTMLUListElement;
 
+const defaultSiteInput = document.getElementById("defaultSite") as HTMLInputElement;
+const addDefaultBtn = document.getElementById("addDefault") as HTMLButtonElement;
+const defaultList = document.getElementById("defaultList") as HTMLUListElement;
+
 function norm(s: string): string {
   return s.trim().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+}
+
+async function getDefaults(): Promise<string[]> {
+  const { defaults } = await chrome.storage.sync.get("defaults") as { defaults?: string[] };
+  return defaults || DEFAULT_BLOCKED;
 }
 
 async function load(): Promise<void> {
   const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
   render(blocked);
+  const defaults = await getDefaults();
+  renderDefaults(defaults);
 }
 
 function render(blocked: string[]): void {
@@ -63,6 +74,28 @@ function render(blocked: string[]): void {
   });
 }
 
+function renderDefaults(defaults: string[]): void {
+  defaultList.innerHTML = "";
+  defaults.forEach((d) => {
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.textContent = d;
+    li.appendChild(span);
+
+    const rm = document.createElement("button");
+    rm.textContent = "×";
+    rm.title = "Remove";
+    rm.onclick = async () => {
+      const current = await getDefaults();
+      const updated = current.filter(site => site !== d);
+      await chrome.storage.sync.set({ defaults: updated });
+      renderDefaults(updated);
+    };
+    li.appendChild(rm);
+    defaultList.appendChild(li);
+  });
+}
+
 addBtn.onclick = async () => {
   const d = norm(siteInput.value);
   if (!d) return;
@@ -75,9 +108,20 @@ addBtn.onclick = async () => {
 
 resetBtn.onclick = async () => {
   if (confirm("Reset to default blocked sites?")) {
-    await chrome.storage.sync.set({ blocked: DEFAULT_BLOCKED });
-    render(DEFAULT_BLOCKED);
+    const defaults = await getDefaults();
+    await chrome.storage.sync.set({ blocked: defaults });
+    render(defaults);
   }
+};
+
+addDefaultBtn.onclick = async () => {
+  const d = norm(defaultSiteInput.value);
+  if (!d) return;
+  const current = await getDefaults();
+  if (!current.includes(d)) current.push(d);
+  await chrome.storage.sync.set({ defaults: current });
+  defaultSiteInput.value = "";
+  renderDefaults(current);
 };
 
 load();
