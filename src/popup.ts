@@ -66,6 +66,11 @@ function render(blocked: string[]): void {
     rm.textContent = "×";
     rm.title = "Remove";
     rm.onclick = async () => {
+      const input = prompt(`Type "${d}" to confirm removal:`);
+      if (input !== d) {
+        if (input !== null) alert("Incorrect. Site not removed.");
+        return;
+      }
       const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
       const updated = blocked.filter(site => site !== d);
       await chrome.storage.sync.set({ blocked: updated });
@@ -88,6 +93,11 @@ function renderDefaults(defaults: string[]): void {
     rm.textContent = "×";
     rm.title = "Remove";
     rm.onclick = async () => {
+      const input = prompt(`Type "${d}" to confirm removal:`);
+      if (input !== d) {
+        if (input !== null) alert("Incorrect. Site not removed.");
+        return;
+      }
       const current = await getDefaults();
       const updated = current.filter(site => site !== d);
       await chrome.storage.sync.set({ defaults: updated });
