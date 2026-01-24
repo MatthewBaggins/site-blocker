@@ -8,6 +8,7 @@ const list = document.getElementById("list") as HTMLUListElement;
 
 const defaultSiteInput = document.getElementById("defaultSite") as HTMLInputElement;
 const addDefaultBtn = document.getElementById("addDefault") as HTMLButtonElement;
+const addCurrentToDefaultsBtn = document.getElementById("addCurrentToDefaults") as HTMLButtonElement;
 const defaultList = document.getElementById("defaultList") as HTMLUListElement;
 
 function norm(s: string): string {
@@ -133,6 +134,17 @@ addDefaultBtn.onclick = async () => {
   if (!current.includes(d)) current.push(d);
   await chrome.storage.sync.set({ defaults: current });
   defaultSiteInput.value = "";
+  renderDefaults(current);
+};
+
+addCurrentToDefaultsBtn.onclick = async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab.url) return;
+  const d = norm(tab.url);
+  if (!d) return;
+  const current = await getDefaults();
+  if (!current.includes(d)) current.push(d);
+  await chrome.storage.sync.set({ defaults: current });
   renderDefaults(current);
 };
 
