@@ -171,11 +171,9 @@ blockCurrentBtn.onclick = async () => {
 };
 
 resetBtn.onclick = async () => {
-  if (confirm("Reset to default blocked sites?")) {
-    const defaults = await getDefaults();
-    await chrome.storage.sync.set({ blocked: defaults });
-    render(defaults);
-  }
+  const defaults = await getDefaults();
+  await chrome.storage.sync.set({ blocked: defaults });
+  render(defaults);
 };
 
 addDefaultBtn.onclick = async () => {
