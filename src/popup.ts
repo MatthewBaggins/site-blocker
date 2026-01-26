@@ -1,4 +1,5 @@
 import { DEFAULT_BLOCKED } from "./config";
+import { randInt } from "./utils";
 
 const siteInput = document.getElementById("site") as HTMLInputElement;
 const addBtn = document.getElementById("add") as HTMLButtonElement;
@@ -11,7 +12,7 @@ const addDefaultBtn = document.getElementById("addDefault") as HTMLButtonElement
 const addCurrentToDefaultsBtn = document.getElementById("addCurrentToDefaults") as HTMLButtonElement;
 const defaultList = document.getElementById("defaultList") as HTMLUListElement;
 
-function confirmRemoval(domain: string): Promise<boolean> {
+const confirmRemoval = (domain: string): Promise<boolean> => {
   return new Promise((resolve) => {
     const modal = document.createElement("div");
     modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000";
@@ -19,8 +20,10 @@ function confirmRemoval(domain: string): Promise<boolean> {
     const box = document.createElement("div");
     box.style.cssText = "background:white;padding:12px;border-radius:8px;width:calc(100% - 20px);max-width:240px";
     
+    const domain_repeats: number = randInt(1, 6);
+
     const msg = document.createElement("p");
-    msg.textContent = `Type "${domain}" to confirm removal:`;
+    msg.textContent = `Type "${domain}" ${domain_repeats} time${domain_repeats === 1 ? "" : "s"} (without whitespace) to confirm removal:`;
     msg.style.cssText = "margin:0 0 8px 0;font-size:12px";
     box.appendChild(msg);
     
@@ -38,7 +41,7 @@ function confirmRemoval(domain: string): Promise<boolean> {
     confirmBtn.style.cssText = "flex:1;padding:4px";
     confirmBtn.onclick = () => {
       document.body.removeChild(modal);
-      resolve(input.value === domain);
+      resolve(input.value === domain.repeat(domain_repeats));
     };
     
     const cancelBtn = document.createElement("button");
@@ -58,23 +61,23 @@ function confirmRemoval(domain: string): Promise<boolean> {
   });
 }
 
-function norm(s: string): string {
+const norm = (s: string): string => {
   return s.trim().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
 }
 
-async function getDefaults(): Promise<string[]> {
+const getDefaults = async (): Promise<string[]> => {
   const { defaults } = await chrome.storage.sync.get("defaults") as { defaults?: string[] };
   return defaults || DEFAULT_BLOCKED;
 }
 
-async function load(): Promise<void> {
+const load = async (): Promise<void> => {
   const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
   render(blocked);
   const defaults = await getDefaults();
   renderDefaults(defaults);
 }
 
-function render(blocked: string[]): void {
+const render = (blocked: string[]): void => {
   list.innerHTML = "";
   blocked.forEach((d, i) => {
     const li = document.createElement("li");
@@ -125,7 +128,7 @@ function render(blocked: string[]): void {
   });
 }
 
-function renderDefaults(defaults: string[]): void {
+const renderDefaults = (defaults: string[]): void => {
   defaultList.innerHTML = "";
   defaults.forEach((d) => {
     const li = document.createElement("li");
@@ -149,7 +152,7 @@ function renderDefaults(defaults: string[]): void {
   });
 }
 
-addBtn.onclick = async () => {
+addBtn.onclick = async (): Promise<void> => {
   const d = norm(siteInput.value);
   if (!d) return;
   const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
@@ -159,7 +162,7 @@ addBtn.onclick = async () => {
   render(blocked);
 };
 
-blockCurrentBtn.onclick = async () => {
+blockCurrentBtn.onclick = async (): Promise<void> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab.url) return;
   const d = norm(tab.url);
@@ -170,13 +173,13 @@ blockCurrentBtn.onclick = async () => {
   render(blocked);
 };
 
-resetBtn.onclick = async () => {
+resetBtn.onclick = async (): Promise<void> => {
   const defaults = await getDefaults();
   await chrome.storage.sync.set({ blocked: defaults });
   render(defaults);
 };
 
-addDefaultBtn.onclick = async () => {
+addDefaultBtn.onclick = async (): Promise<void> => {
   const d = norm(defaultSiteInput.value);
   if (!d) return;
   const current = await getDefaults();
@@ -186,7 +189,7 @@ addDefaultBtn.onclick = async () => {
   renderDefaults(current);
 };
 
-addCurrentToDefaultsBtn.onclick = async () => {
+addCurrentToDefaultsBtn.onclick = async (): Promise<void> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab.url) return;
   const d = norm(tab.url);
