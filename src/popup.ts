@@ -1,5 +1,5 @@
 import { DEFAULT_BLOCKED } from "./config";
-import { randInt } from "./utils";
+import { randInt, getDomainOrigins } from "./utils";
 
 const siteInput = document.getElementById("site") as HTMLInputElement;
 const addBtn = document.getElementById("add") as HTMLButtonElement;
@@ -91,14 +91,7 @@ const render = (blocked: string[]): void => {
     clearCache.onclick = async () => {
       try {
         // Build list of common origin variations for this domain
-        const origins = [
-          `https://${d}`,
-          `http://${d}`,
-          `https://www.${d}`,
-          `http://www.${d}`,
-          `https://m.${d}`,
-          `http://m.${d}`
-        ];
+        const origins = getDomainOrigins(d);
         
         await chrome.browsingData.remove(
           { origins },
