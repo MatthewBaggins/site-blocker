@@ -1,5 +1,10 @@
 import { DEFAULT_BLOCKED } from "./config";
 
+const getDefaults = async (): Promise<string[]> => {
+  const { defaults } = await chrome.storage.sync.get("defaults") as { defaults?: string[] };
+  return defaults || DEFAULT_BLOCKED;
+};
+
 const updateRules = async (blocked: string[]): Promise<void> => {
   const rules: chrome.declarativeNetRequest.Rule[] = blocked.map((domain, i) => ({
     id: i + 1,
@@ -29,6 +34,17 @@ chrome.runtime.onInstalled.addListener(async (): Promise<void> => {
     await updateRules(DEFAULT_BLOCKED);
   } else {
     await updateRules(blocked);
+  }
+  
+  // Create alarm to reset to defaults every 5 minutes
+  chrome.alarms.create("resetToDefaults", { periodInMinutes: 5 });
+});
+
+chrome.alarms.onAlarm.addListener(async (alarm): Promise<void> => {
+  if (alarm.name === "resetToDefaults") {
+    const defaults = await getDefaults();
+    await chrome.storage.sync.set({ blocked: defaults });
+    await updateRules(defaults);
   }
 });
 

@@ -3,7 +3,7 @@
   "name": "Site Blocker",
   "version": "0.1.0",
   "description": "Block selected sites.",
-  "permissions": ["declarativeNetRequest", "declarativeNetRequestWithHostAccess", "storage", "browsingData", "tabs"],
+  "permissions": ["declarativeNetRequest", "declarativeNetRequestWithHostAccess", "storage", "browsingData", "tabs", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "dist/bg.js" },
   "action": { "default_popup": "popup.html" }
