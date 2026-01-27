@@ -1,5 +1,5 @@
 import { DEFAULT_BLOCKED } from "./config";
-import { randInt, getDomainOrigins } from "./utils";
+import { randInt, getDomainOrigins, shuffleList } from "./utils";
 
 const siteInput = document.getElementById("site") as HTMLInputElement;
 const addBtn = document.getElementById("add") as HTMLButtonElement;
@@ -70,6 +70,18 @@ const getDefaults = async (): Promise<string[]> => {
   return defaults || DEFAULT_BLOCKED;
 }
 
+const clearDomainCache = async (domain: string): Promise<void> => {
+  try {
+    const origins = getDomainOrigins(domain);
+    await chrome.browsingData.remove(
+      { origins },
+      { cache: true, cacheStorage: true, serviceWorkers: true }
+    );
+  } catch (e) {
+    console.error(`Cache clear failed for ${domain}:`, e);
+  }
+}
+
 const load = async (): Promise<void> => {
   const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
   render(blocked);
@@ -79,31 +91,12 @@ const load = async (): Promise<void> => {
 
 const render = (blocked: string[]): void => {
   list.innerHTML = "";
-  blocked.forEach((d, i) => {
+  const shuffledDomains = shuffleList(blocked);
+  shuffledDomains.forEach((d, i) => {
     const li = document.createElement("li");
     const span = document.createElement("span");
     span.textContent = d;
     li.appendChild(span);
-
-    const clearCache = document.createElement("button");
-    clearCache.textContent = "🗑";
-    clearCache.title = "Clear cache";
-    clearCache.onclick = async () => {
-      try {
-        // Build list of common origin variations for this domain
-        const origins = getDomainOrigins(d);
-        
-        await chrome.browsingData.remove(
-          { origins },
-          { cache: true, cacheStorage: true, serviceWorkers: true }
-        );
-        alert(`Cache cleared for ${d}`);
-      } catch (e) {
-        console.error('Cache clear failed:', e);
-        alert(`Failed to clear cache: ${e}`);
-      }
-    };
-    li.appendChild(clearCache);
 
     const rm = document.createElement("button");
     rm.textContent = "×";
@@ -123,7 +116,8 @@ const render = (blocked: string[]): void => {
 
 const renderDefaults = (defaults: string[]): void => {
   defaultList.innerHTML = "";
-  defaults.forEach((d) => {
+  const shuffledDomains = shuffleList(defaults);
+  shuffledDomains.forEach((d) => {
     const li = document.createElement("li");
     const span = document.createElement("span");
     span.textContent = d;
@@ -149,7 +143,10 @@ addBtn.onclick = async (): Promise<void> => {
   const d = norm(siteInput.value);
   if (!d) return;
   const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
-  if (!blocked.includes(d)) blocked.push(d);
+  if (!blocked.includes(d)) {
+    blocked.push(d);
+    await clearDomainCache(d);
+  }
   await chrome.storage.sync.set({ blocked });
   siteInput.value = "";
   render(blocked);
@@ -161,7 +158,10 @@ blockCurrentBtn.onclick = async (): Promise<void> => {
   const d = norm(tab.url);
   if (!d) return;
   const { blocked = [] } = await chrome.storage.sync.get("blocked") as { blocked?: string[] };
-  if (!blocked.includes(d)) blocked.push(d);
+  if (!blocked.includes(d)) {
+    blocked.push(d);
+    await clearDomainCache(d);
+  }
   await chrome.storage.sync.set({ blocked });
   render(blocked);
 };
